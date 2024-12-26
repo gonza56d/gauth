@@ -1,0 +1,22 @@
+
+services:
+
+  gauth:
+    build:
+      context: ./api
+      dockerfile: ../Dockerfile
+    ports:
+      - "7779:7779"
+    command: go run ./cmd/main.go
+    env_file:
+      - .env
+
+  gauth-mongo:
+    image: mongo:5.0.31-rc0
+    ports:
+      - "27019:27019"
+    volumes:
+      - ./api/mongo:/data/db
+    env_file:
+      - .env
+
