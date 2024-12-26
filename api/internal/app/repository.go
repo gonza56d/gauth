@@ -4,7 +4,7 @@ import (
 	"context"
 	"os"
 
-	//apimodel "github.com/gonza56d/gauth/pkg"
+	apimodel "github.com/gonza56d/gauth/pkg"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -35,4 +35,27 @@ func withMongoClient(callback func(client *mongo.Collection) error) error {
 	}()
 	coll := client.Database(database).Collection(collection)
 	return callback(coll)
+}
+
+func authenticate(request *apimodel.Auth) string {
+	var count int64
+	var token string
+	err := withMongoClient(func(coll *mongo.Collection) error {
+		var err error
+		count, err = coll.CountDocuments(context.TODO(), bson.D{
+			{Key: "email", Value: request.Email},
+			{Key: "password", Value: request.Password},
+		})
+		if err != nil {
+			panic(err)
+		}
+		return nil
+	})
+	if err != nil {
+		panic(err)
+	}
+	if count > 0 {
+		// generate jwt
+	}
+	return token
 }
