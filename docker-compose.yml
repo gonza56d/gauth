@@ -14,7 +14,7 @@ services:
   gauth-mongo:
     image: mongo:5.0.31-rc0
     ports:
-      - "27019:27019"
+      - "27019:8779"
     volumes:
       - ./api/mongo:/data/db
     env_file:
