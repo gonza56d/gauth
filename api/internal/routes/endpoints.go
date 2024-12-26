@@ -2,7 +2,7 @@ package routes
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/go-playground/validator/v10"
+	//"github.com/go-playground/validator/v10"
 	//"github.com/gonza56d/gauth/internal/app"
 	//apimodel "github.com/gonza56d/gauth/pkg"
 	"github.com/google/uuid"
@@ -38,5 +38,5 @@ func isValidUUID(value string, ctx *gin.Context, action string) *uuid.UUID {
 }
 
 func authRoute(rg *gin.RouterGroup) {
-	authRoute := rg.Group("/auth")
+	//authRoute := rg.Group("/auth")
 }
