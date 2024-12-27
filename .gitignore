@@ -26,3 +26,6 @@ go.work.sum
 
 # mongo volume
 api/mongo
+
+# redis
+api/redis
