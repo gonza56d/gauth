@@ -9,7 +9,8 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-func Login(request *apimodel.LoginRequest) string {
+// Log in user and return a JWT token if successful.
+func Login(request *apimodel.AuthRequest) string {
 	var authenticated bool = login(request)
 	if !authenticated {
 		return ""
@@ -26,4 +27,13 @@ func Login(request *apimodel.LoginRequest) string {
 	}
 	storeJWT(request.Email, tokenString)
 	return tokenString
+}
+
+// Signup user and return true if successful or false if email is already taken.
+func SignUp(request *apimodel.AuthRequest) bool {
+	if isEmailTaken(request.Email) {
+		return false
+	}
+	signUp(request)
+	return true
 }

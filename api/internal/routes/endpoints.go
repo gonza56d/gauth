@@ -37,29 +37,36 @@ func isValidUUID(value string, ctx *gin.Context, action string) *uuid.UUID {
 	return &result 
 }
 
+func isValidRequest(request interface{}, action string, ctx *gin.Context) bool {
+	if err := ctx.ShouldBindJSON(&request); err != nil {
+		ctx.JSON(400, gin.H{
+			"message": "Bad request",
+			"error": err.Error(),
+			"action": action,
+		})
+		return false
+	}
+	validate := validator.New()
+	if err := validate.Struct(request); err != nil {
+		ctx.JSON(400, gin.H{
+			"message": "Bad request",
+			"error": err.Error(),
+			"action": action,
+		})
+		return false
+	}
+	return true
+}
+
 func authRoute(rg *gin.RouterGroup) {
 	authRoute := rg.Group("/auth")
 
 	// authenticate
 	authRoute.POST("/login", func(ctx *gin.Context) {
 		action := "LOGIN"
-		var request apimodel.LoginRequest
-		if err := ctx.ShouldBindJSON(&request); err != nil {
-			ctx.JSON(400, gin.H{
-				"message": "Bad request",
-				"error": err.Error(),
-				"action": action,
-			})
-			return
-		}
-		validate := validator.New()
-		if err := validate.Struct(request); err != nil {
-			ctx.JSON(400, gin.H{
-				"message": "Bad request",
-				"error": err.Error(),
-				"action": action,
-			})
-			return
+		var request apimodel.AuthRequest
+		if !isValidRequest(&request, action, ctx) {
+			return 
 		}
 		jwt_token := app.Login(&request)
 		if jwt_token == "" {
@@ -72,6 +79,38 @@ func authRoute(rg *gin.RouterGroup) {
 		}
 		ctx.JSON(201, gin.H{
 			"jwt_token": jwt_token,
+		})
+	})
+
+	// sign up
+	authRoute.POST("/signup", func(ctx *gin.Context) {
+		action := "SIGNUP"
+		var request apimodel.AuthRequest
+		if !isValidRequest(&request, action, ctx) {
+			return
+		}
+		if len(request.Password) < 8 {
+			ctx.JSON(400, gin.H{
+				"message": "Bad request",
+				"error": "Password must be at least 8 characters long",
+				"action": action,
+			})
+			return
+		}
+		if !app.SignUp(&request) {
+			ctx.JSON(409, gin.H{
+				"message": "Conflict",
+				"error": "Email already taken",
+				"action": action,
+			})
+			return
+		}
+		ctx.JSON(201, gin.H{
+			"message": "Sign up successful",
+			"credentials": {
+				"email": request.Email,
+				"password": "*",
+			}
 		})
 	})
 }

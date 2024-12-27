@@ -40,7 +40,7 @@ func withMongoClient(callback func(client *mongo.Collection) error) error {
 	return callback(coll)
 }
 
-func login(request *apimodel.LoginRequest) bool {
+func login(request *apimodel.AuthRequest) bool {
 	var count int64
 	err := withMongoClient(func(coll *mongo.Collection) error {
 		var err error
@@ -60,6 +60,43 @@ func login(request *apimodel.LoginRequest) bool {
 		return true
 	}
 	return false
+}
+
+func isEmailTaken(email string) bool {
+	var count int64
+	err := withMongoClient(func(coll *mongo.Collection) error {
+		var err error
+		count, err = coll.CountDocuments(context.TODO(), bson.D{
+			{Key: "email", Value: email},
+		})
+		if err != nil {
+			panic(err)
+		}
+		return nil
+	})
+	if err != nil {
+		panic(err)
+	}
+	if count > 0 {
+		return true
+	}
+	return false
+}
+
+func signUp(request *apimodel.AuthRequest) {
+	err := withMongoClient(func(coll *mongo.Collection) error {
+		_, err := coll.InsertOne(context.TODO(), bson.D{
+			{Key: "email", Value: request.Email},
+			{Key: "password", Value: request.Password},
+		})
+		if err != nil {
+			panic(err)
+		}
+		return nil
+	})
+	if err != nil {
+		panic(err)
+	}
 }
 
 func getRedisClient() *redis.Client {
