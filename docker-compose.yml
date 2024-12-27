@@ -20,3 +20,11 @@ services:
     env_file:
       - .env
 
+  gauth-redis:
+    image: redis:6.2.6
+    ports:
+      - "6379:9779"
+    volumes:
+      - ./api/redis:/data
+    env_file:
+      - .env

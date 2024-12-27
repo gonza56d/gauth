@@ -3,7 +3,10 @@ package app
 import (
 	"context"
 	"os"
+	"strconv"
+	"time"
 
+	"github.com/go-redis/redis/v8"
 	apimodel "github.com/gonza56d/gauth/pkg"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -37,9 +40,8 @@ func withMongoClient(callback func(client *mongo.Collection) error) error {
 	return callback(coll)
 }
 
-func authenticate(request *apimodel.Auth) string {
+func login(request *apimodel.LoginRequest) bool {
 	var count int64
-	var token string
 	err := withMongoClient(func(coll *mongo.Collection) error {
 		var err error
 		count, err = coll.CountDocuments(context.TODO(), bson.D{
@@ -55,7 +57,39 @@ func authenticate(request *apimodel.Auth) string {
 		panic(err)
 	}
 	if count > 0 {
-		// generate jwt
+		return true
 	}
-	return token
+	return false
+}
+
+func getRedisClient() *redis.Client {
+	rdb := redis.NewClient(&redis.Options{
+		Addr: os.Getenv("REDIS_HOST") + ":" + os.Getenv("REDIS_PORT"),
+	})
+	return rdb
+}
+
+func storeJWT(userEmail string, jwt string) {
+	rdb := getRedisClient()
+	tokenExpStr := os.Getenv("JWT_EXPIRATION_TIME_IN_HOURS")
+	if tokenExpStr == "" {
+		panic("JWT_EXPIRATION_TIME_IN_HOURS is not set")
+	}
+	tokenExp, err := strconv.Atoi(tokenExpStr)
+	if err != nil {
+		panic(err)
+	}
+	err = rdb.Set(nil, userEmail, jwt, time.Duration(tokenExp) * time.Hour).Err()
+	if err!= nil {
+		panic(err)
+	}
+}
+
+func getJWT(userEmail string) string {
+	rdb := getRedisClient()
+	val, err := rdb.Get(nil, userEmail).Result()
+	if err != nil {
+		panic(err)
+	}
+	return val
 }

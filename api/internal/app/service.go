@@ -1,7 +1,29 @@
 package app
 
-import apimodel "github.com/gonza56d/gauth/pkg"
+import (
+	"os"
+	"time"
 
-func Authenticate(request *apimodel.Auth) string {
+	apimodel "github.com/gonza56d/gauth/pkg"
 
+	"github.com/golang-jwt/jwt/v5"
+)
+
+func Login(request *apimodel.LoginRequest) string {
+	var authenticated bool = login(request)
+	if !authenticated {
+		return ""
+	}
+	secretKey := []byte(os.Getenv("JWT_SECRET_KEY"))
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"email": request.Email,
+		"iat": time.Now().Unix(),
+		"exp": time.Now().Add(time.Hour * 24).Unix(),
+	})
+	tokenString, err := token.SignedString(secretKey)
+	if err != nil {
+		panic(err)
+	}
+	storeJWT(request.Email, tokenString)
+	return tokenString
 }
