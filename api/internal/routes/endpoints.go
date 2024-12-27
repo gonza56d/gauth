@@ -107,10 +107,10 @@ func authRoute(rg *gin.RouterGroup) {
 		}
 		ctx.JSON(201, gin.H{
 			"message": "Sign up successful",
-			"credentials": {
+			"credentials": map[string]string{
 				"email": request.Email,
 				"password": "*",
-			}
+			},
 		})
 	})
 }
