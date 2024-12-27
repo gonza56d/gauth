@@ -37,7 +37,7 @@ func isValidUUID(value string, ctx *gin.Context, action string) *uuid.UUID {
 	return &result 
 }
 
-func isValidRequest(request interface{}, action string, ctx *gin.Context) bool {
+func isValidRequest(request *apimodel.AuthRequest, action string, ctx *gin.Context) bool {
 	if err := ctx.ShouldBindJSON(&request); err != nil {
 		ctx.JSON(400, gin.H{
 			"message": "Bad request",
